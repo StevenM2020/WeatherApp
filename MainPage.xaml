@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WeatherApp.MainPage">
+
+    <ScrollView>
+        <VerticalStackLayout 
+            Padding="30,0"
+            Spacing="25">
+            
+            <Label
+                x:Name="lblTitle"
+                Text="Three Day Weather Forcast App"
+                Style="{StaticResource Headline}"
+                SemanticProperties.HeadingLevel="Level1"></Label>
+
+            <Entry x:Name="txtZipCode" Placeholder="Enter your zip code here." TextChanged="TxtZipCode_OnTextChanged" />
+            <Button x:Name="btnGetWeather" Text="Get Weather Forcast" Clicked="BtnGetWeather_OnClickedAsync" />
+
+            <Grid x:Name="weatherGrid"
+                  RowDefinitions="Auto,*,Auto"
+                  ColumnDefinitions="*,*,*">
+            </Grid>
+
+            <VerticalStackLayout VerticalOptions="EndAndExpand" HorizontalOptions="Center" >
+                <Label
+                    Text="Developed by Steven Motz"
+                    TextColor="Gray"
+                    HorizontalTextAlignment="Center" />
+                <Label
+                    Text="Data provided by Tomorrow.io"
+                    TextColor="Gray"
+                    HorizontalTextAlignment="Center"/>
+                <Label
+                    Text="Weather Calendar icon by Icons8"
+                    TextColor="Gray"
+                    HorizontalTextAlignment="Center"/>
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
