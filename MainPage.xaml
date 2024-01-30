@@ -10,7 +10,7 @@
             
             <Label
                 x:Name="lblTitle"
-                Text="Three Day Weather Forcast App"
+                Text="Three Day Weather Forecast App"
                 Style="{StaticResource Headline}"
                 SemanticProperties.HeadingLevel="Level1"></Label>
 
