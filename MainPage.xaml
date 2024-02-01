@@ -28,6 +28,12 @@
                   ColumnDefinitions="*,*,*">
             </Grid>
 
+            <Label
+                x:Name="lblAI"
+                Text="AI Weather Recommendations"
+                TextColor="white"
+                HorizontalTextAlignment="Center" />
+
             <VerticalStackLayout VerticalOptions="EndAndExpand" HorizontalOptions="Center" >
                 <Label
                     Text="Developed by Steven Motz"
