@@ -6,216 +6,229 @@
 using Newtonsoft.Json.Linq;
 using System.Net.Http;
 
-namespace WeatherApp
+namespace WeatherApp;
+
+public partial class MainPage : ContentPage
 {
-    public partial class MainPage : ContentPage
+    public MainPage()
     {
-        int count = 0;
+        InitializeComponent();
+        btnGetWeather.IsEnabled = false;
+    }
 
-        List<weatherData> weatherDataDays = new List<weatherData>();
-        
-        public MainPage()
+    public static readonly HttpClient httpClient = new();
+
+    private void BtnGetWeather_OnClicked(object sender, EventArgs e)
+    {
+        BtnGetWeather_OnClickedAsync(sender, e);
+    }
+
+    private async void BtnGetWeather_OnClickedAsync(object sender, EventArgs e)
+    {
+        // get the API key from the secure storage and check if it is null
+        var APIKey = await SecureStorage.GetAsync("ApiKey");
+        if (APIKey == null)
         {
-            InitializeComponent();
-            btnGetWeather.IsEnabled = false;
-            
+            await DisplayAlert("Error", "API Key Failed to load", "OK");
+            return;
         }
 
-        public static readonly HttpClient httpClient = new HttpClient();
 
-        private void BtnGetWeather_OnClicked(object sender, EventArgs e)
-        {
-            BtnGetWeather_OnClickedAsync(sender, e);
-        }
+        var zipCode = txtZipCode.Text; // get zip from textbox
 
-        private async void BtnGetWeather_OnClickedAsync(object sender, EventArgs e)
+        // create the url
+        var url = "https://api.tomorrow.io/v4/weather/forecast?location=" + zipCode +
+                  "&timesteps=1d&units=imperial&apikey=" + APIKey;
+
+
+        try
         {
-            // get the API key from the secure storage and check if it is null
-            string APIKey = await SecureStorage.GetAsync("ApiKey");
-            if (APIKey == null)
+            // make the call to the API
+            var response = await httpClient.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            var responseBody = await response.Content.ReadAsStringAsync();
+
+            // gets the weather data from the response
+            var json = JObject.Parse(responseBody);
+            var weather = json["timelines"]["daily"][0];
+            var weatherString = weather.ToString();
+
+
+            // this line checks if the first day is the current day or not
+            var intStartDay = DateTime.Today.ToString("d").Split("/")[1] ==
+                              json["timelines"]["daily"][0]["time"].ToString().Split("/")[1] ? 0 : 1;
+
+
+            //clear the grid
+            weatherGrid.Children.Clear();
+            weatherGrid.RowDefinitions.Clear();
+            weatherGrid.ColumnDefinitions.Clear();
+
+            // add rows to the grid
+            for (var j = 0; j < 6; j++)
+                weatherGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+
+            for (var k = 0; k < 3; k++)
+                weatherGrid.ColumnDefinitions.Add(new ColumnDefinition
+                    { Width = new GridLength(1, GridUnitType.Star) });
+
+
+            // loop through the next 3 days
+            for (var i = intStartDay; i < 3 + intStartDay; i++)
             {
-                await DisplayAlert("Error", "API Key Failed to load", "OK");
+                var weatherDataDay = new weatherData();
+
+                // get data from json
+                weatherDataDay.minTemp =
+                    float.Parse(json["timelines"]["daily"][i]["values"]["temperatureMin"].ToString());
+                weatherDataDay.maxTemp =
+                    float.Parse(json["timelines"]["daily"][i]["values"]["temperatureMax"].ToString());
+                weatherDataDay.avgTemp =
+                    float.Parse(json["timelines"]["daily"][i]["values"]["temperatureAvg"].ToString());
+                weatherDataDay.precipitation =
+                    float.Parse(json["timelines"]["daily"][i]["values"]["precipitationProbabilityAvg"]
+                        .ToString());
+                weatherDataDay.cloudCover =
+                    float.Parse(json["timelines"]["daily"][i]["values"]["cloudCoverAvg"].ToString());
+                weatherDataDay.day = int.Parse(json["timelines"]["daily"][i]["time"].ToString().Split("/")[1]);
+                weatherDataDay.maxSnowIntensity =
+                    float.Parse(json["timelines"]["daily"][i]["values"]["snowIntensityMax"].ToString());
+                weatherDataDay.avgSnowAccumulation =
+                    float.Parse(json["timelines"]["daily"][i]["values"]["snowAccumulationAvg"].ToString());
+
+
+                // send data to the labels
+                AddWeatherToGrid(weatherDataDay, i - intStartDay);
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine(ex.Message);
+            await DisplayAlert("Error", ex.Message, "OK");
+        }
+    }
+
+    // This method checks the zip code and enables the button.
+    private void TxtZipCode_OnTextChanged(object? sender, TextChangedEventArgs e)
+    {
+        btnGetWeather.IsEnabled = false;
+
+        // check if the text is a number
+        foreach (var chrTxt in txtZipCode.Text)
+            if (!char.IsDigit(chrTxt))
                 return;
-            }
 
+        // check if the text is 5 characters long
+        btnGetWeather.IsEnabled = txtZipCode.Text.Length == 5;
+    }
 
-            string zipCode = txtZipCode.Text; // get zip from textbox
+    // if the user presses enter, it will click the button
+    private void TxtZipCode_OnCompleted(object? sender, EventArgs e)
+    {
+        if (btnGetWeather.IsEnabled)
+            BtnGetWeather_OnClickedAsync(sender, e);
+    }
 
-            // create the url
-            string url = "https://api.tomorrow.io/v4/weather/forecast?location="+zipCode+"&timesteps=1d&units=imperial&apikey=" + APIKey;
-            
+    private struct weatherData
+    {
+        public float minTemp;
+        public float maxTemp;
+        public float avgTemp;
+        public float precipitation;
+        public float cloudCover;
+        public int day;
+        public float maxSnowIntensity;
+        public float avgSnowAccumulation;
+    }
 
-            try
-            {
-                // make the call to the API
-                HttpResponseMessage response = await httpClient.GetAsync(url);
-                response.EnsureSuccessStatusCode();
-                string responseBody = await response.Content.ReadAsStringAsync();
-
-                // gets the weather data from the response
-                JObject json = JObject.Parse(responseBody);
-                JToken weather = json["timelines"]["daily"][0];
-                string weatherString = weather.ToString();
-                
-                
-                // this line checks if the first day is the current day or not
-                int intStartDay = DateTime.Today.ToString("d").Split("/")[1] == (json["timelines"]["daily"][0]["time"]).ToString().Split("/")[1] ? 0 : 1;
-
-
-                //clear the grid
-                weatherGrid.Children.Clear();
-                weatherGrid.RowDefinitions.Clear();
-                weatherGrid.ColumnDefinitions.Clear();
-
-                // add rows to the grid
-                for (int j = 0; j < 6; j++)
-                    weatherGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-
-                for (int k = 0; k < 3; k++)
-                    weatherGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-
-
-                // loop through the next 3 days
-                for (int i = intStartDay; i < 3 + intStartDay; i++)
-                {
-                    weatherData weatherDataDay = new weatherData();
-
-                    // get data from json
-                    weatherDataDay.minTemp = float.Parse((json["timelines"]["daily"][i]["values"]["temperatureMin"]).ToString());
-                    weatherDataDay.maxTemp = float.Parse((json["timelines"]["daily"][i]["values"]["temperatureMax"]).ToString());
-                    weatherDataDay.avgTemp = float.Parse((json["timelines"]["daily"][i]["values"]["temperatureAvg"]).ToString());
-                    weatherDataDay.precipitation = float.Parse((json["timelines"]["daily"][i]["values"]["precipitationProbabilityAvg"]).ToString());
-                    weatherDataDay.cloudCover = float.Parse((json["timelines"]["daily"][i]["values"]["cloudCoverAvg"]).ToString());
-                    weatherDataDay.day = int.Parse((json["timelines"]["daily"][i]["time"]).ToString().Split("/")[1]);
-                    weatherDataDay.maxSnowIntensity = float.Parse((json["timelines"]["daily"][i]["values"]["snowIntensityMax"]).ToString());
-                    weatherDataDay.avgSnowAccumulation = float.Parse((json["timelines"]["daily"][i]["values"]["snowAccumulationAvg"]).ToString());
-
-
-                    // send data to the labels
-
-                    var DayLabel = new Label
-                    {
-                        Text = "Day: " + weatherDataDay.day.ToString(),
-                        HorizontalOptions = LayoutOptions.Center,
-                        VerticalOptions = LayoutOptions.Center
-                    };
-                    Grid.SetColumn(DayLabel, i - intStartDay);
-                    Grid.SetRow(DayLabel, 0);
-                    weatherGrid.Children.Add(DayLabel);
-
-                    var avgTempLabel = new Label
-                    {
-                        Text = "Avg Temp: " + weatherDataDay.avgTemp.ToString() + "F",
-                        HorizontalOptions = LayoutOptions.Center,
-                        VerticalOptions = LayoutOptions.Center
-                    };
-                    Grid.SetColumn(avgTempLabel, i - intStartDay);
-                    Grid.SetRow(avgTempLabel, 2);
-                    weatherGrid.Children.Add(avgTempLabel);
-
-                    var minTempLabel = new Label
-                    {
-                        Text = "Min Temp: " + weatherDataDay.minTemp.ToString() + "F",
-                        HorizontalOptions = LayoutOptions.Center,
-                        VerticalOptions = LayoutOptions.Center
-                    };
-                    Grid.SetColumn(minTempLabel, i - intStartDay);
-                    Grid.SetRow(minTempLabel, 3);
-                    weatherGrid.Children.Add(minTempLabel);
-
-                    var maxTempLabel = new Label
-                    {
-                        Text = "Max Temp: " + weatherDataDay.maxTemp.ToString() + "F",
-                        HorizontalOptions = LayoutOptions.Center,
-                        VerticalOptions = LayoutOptions.Center
-                    };
-                    Grid.SetColumn(maxTempLabel, i - intStartDay);
-                    Grid.SetRow(maxTempLabel, 4);
-                    weatherGrid.Children.Add(maxTempLabel);
-
-                    var precipitationLabel = new Label
-                    {
-                        Text = "Precipitation: " + weatherDataDay.precipitation.ToString() + "%",
-                        HorizontalOptions = LayoutOptions.Center,
-                        VerticalOptions = LayoutOptions.Center
-                    };
-                    Grid.SetColumn(precipitationLabel, i - intStartDay);
-                    Grid.SetRow(precipitationLabel, 5);
-                    weatherGrid.Children.Add(precipitationLabel);
-
-                    var emojiLabel = new Label
-                    {
-                        Text = GetWeatherEmoji(weatherDataDay),
-                        HorizontalOptions = LayoutOptions.Center,
-                        VerticalOptions = LayoutOptions.Center,
-                        FontSize = 50
-                    };
-                    Grid.SetColumn(emojiLabel, i - intStartDay);
-                    Grid.SetRow(emojiLabel, 1);
-                    weatherGrid.Children.Add(emojiLabel);
-
-                }
-
-
-            }
-            catch (HttpRequestException ex)
-            {
-                Console.WriteLine(ex.Message);
-                await DisplayAlert("Error", ex.Message, "OK");
-            }
-        }
-
-        // This method checks the zip code and enables the button.
-        private void TxtZipCode_OnTextChanged(object? sender, TextChangedEventArgs e)
+    // This method adds the weather data to the grid using the weatherData struct and the column number.
+    private void AddWeatherToGrid(weatherData weatherDataDay, int column)
+    {
+        var DayLabel = new Label
         {
-            string txtZipCode = e.NewTextValue;
-            if (txtZipCode.Length == 5)
-            {
-                btnGetWeather.IsEnabled = true;
-            }
-            else
-            {
-                btnGetWeather.IsEnabled = false;
-            }
-            
-        }
+            Text = "Day: " + weatherDataDay.day,
+            HorizontalOptions = LayoutOptions.Center,
+            VerticalOptions = LayoutOptions.Center
+        };
+        Grid.SetColumn(DayLabel, column);
+        Grid.SetRow(DayLabel, 0);
+        weatherGrid.Children.Add(DayLabel);
 
-        struct weatherData
+        var avgTempLabel = new Label
         {
-            public float minTemp;
-            public float maxTemp;
-            public float avgTemp;
-            public float precipitation;
-            public float cloudCover;
-            public int day;
-            public float maxSnowIntensity;
-            public float avgSnowAccumulation;
+            Text = "Avg Temp: " + weatherDataDay.avgTemp + "F",
+            HorizontalOptions = LayoutOptions.Center,
+            VerticalOptions = LayoutOptions.Center
+        };
+        Grid.SetColumn(avgTempLabel, column);
+        Grid.SetRow(avgTempLabel, 2);
+        weatherGrid.Children.Add(avgTempLabel);
 
-        }
-
-        // This method returns the emoji for the weather based on the weather data.
-        string GetWeatherEmoji(weatherData weather)
+        var minTempLabel = new Label
         {
-            switch (weather)
-            {
-                case weatherData weatherData when weatherData.maxSnowIntensity > 0 || weatherData.avgSnowAccumulation > 0:
-                    return "🌨️";
+            Text = "Min Temp: " + weatherDataDay.minTemp + "F",
+            HorizontalOptions = LayoutOptions.Center,
+            VerticalOptions = LayoutOptions.Center
+        };
+        Grid.SetColumn(minTempLabel, column);
+        Grid.SetRow(minTempLabel, 3);
+        weatherGrid.Children.Add(minTempLabel);
+
+        var maxTempLabel = new Label
+        {
+            Text = "Max Temp: " + weatherDataDay.maxTemp + "F",
+            HorizontalOptions = LayoutOptions.Center,
+            VerticalOptions = LayoutOptions.Center
+        };
+        Grid.SetColumn(maxTempLabel, column);
+        Grid.SetRow(maxTempLabel, 4);
+        weatherGrid.Children.Add(maxTempLabel);
+
+        var precipitationLabel = new Label
+        {
+            Text = "Precipitation: " + weatherDataDay.precipitation + "%",
+            HorizontalOptions = LayoutOptions.Center,
+            VerticalOptions = LayoutOptions.Center
+        };
+        Grid.SetColumn(precipitationLabel, column);
+        Grid.SetRow(precipitationLabel, 5);
+        weatherGrid.Children.Add(precipitationLabel);
+
+        var emojiLabel = new Label
+        {
+            Text = GetWeatherEmoji(weatherDataDay),
+            HorizontalOptions = LayoutOptions.Center,
+            VerticalOptions = LayoutOptions.Center,
+            FontSize = 50
+        };
+        Grid.SetColumn(emojiLabel, column);
+        Grid.SetRow(emojiLabel, 1);
+        weatherGrid.Children.Add(emojiLabel);
+    }
+
+    // This method returns the emoji for the weather based on the weather data.
+    private string GetWeatherEmoji(weatherData weather)
+    {
+        switch (weather)
+        {
+            case weatherData weatherData
+                when weatherData.maxSnowIntensity > 0 || weatherData.avgSnowAccumulation > 0:
+                return "🌨️";
                 break;
-                case weatherData weatherData when weatherData.precipitation > 50:
-                    return weather.cloudCover > 50 ? "🌧️" : "🌦️";
-                    break;
-                case weatherData weatherData when weatherData.cloudCover > 70:
-                    return "☁️";
-                case weatherData weatherData when weatherData.avgTemp > 80:
-                    return "☀️";
+            case weatherData weatherData when weatherData.precipitation > 50:
+                return weather.cloudCover > 50 ? "🌧️" : "🌦️";
                 break;
-                case weatherData weatherData when weatherData.avgTemp < 40:
-                    return "❄️";
+            case weatherData weatherData when weatherData.cloudCover > 70:
+                return "☁️";
+            case weatherData weatherData when weatherData.avgTemp > 80:
+                return "☀️";
                 break;
-                default:
-                    return "🌤️";
+            case weatherData weatherData when weatherData.avgTemp < 40:
+                return "❄️";
                 break;
-            }
+            default:
+                return "🌤️";
+                break;
         }
     }
 }

@@ -10,12 +10,11 @@
 
             MainPage = new AppShell();
 
-           
         }
 
         private async void StoreApiKey()
         {
-            await SecureStorage.SetAsync("ApiKey", "ScRltfTWacbSTx79gRrvhS11s4xLzlgh");
+            await SecureStorage.SetAsync("ApiKey", "");
         }
 
         // this method is used to set the size of the window
