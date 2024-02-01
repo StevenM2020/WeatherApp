@@ -14,8 +14,14 @@
                 Style="{StaticResource Headline}"
                 SemanticProperties.HeadingLevel="Level1"></Label>
 
-            <Entry x:Name="txtZipCode" Placeholder="Enter your zip code here." TextChanged="TxtZipCode_OnTextChanged" />
-            <Button x:Name="btnGetWeather" Text="Get Weather Forcast" Clicked="BtnGetWeather_OnClickedAsync" />
+            <Entry x:Name="txtZipCode" 
+                   Placeholder="Enter your zip code here." 
+                   TextChanged="TxtZipCode_OnTextChanged" 
+                   Completed="TxtZipCode_OnCompleted"/>
+
+            <Button x:Name="btnGetWeather" 
+                    Text="Get Weather Forecast" 
+                    Clicked="BtnGetWeather_OnClickedAsync" />
 
             <Grid x:Name="weatherGrid"
                   RowDefinitions="Auto,*,Auto"
