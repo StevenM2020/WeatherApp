@@ -1,4 +1,5 @@
-﻿namespace WeatherApp
+﻿using Secrets = WeatherApp.Secrets;
+namespace WeatherApp
 {
     public partial class App : Application
     {
@@ -6,16 +7,10 @@
         {
             InitializeComponent();
 
-            StoreApiKey();
+            Secrets.InitializeKeys();
 
             MainPage = new AppShell();
 
-        }
-
-        private async void StoreApiKey()
-        {
-            await SecureStorage.SetAsync("WeatherApiKey", "");
-            await SecureStorage.SetAsync("OpenAIApiKey", "");
         }
 
         // this method is used to set the size of the window
