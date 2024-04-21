@@ -1,5 +1,4 @@
-﻿using Secrets = WeatherApp.Secrets;
-namespace WeatherApp
+﻿namespace WeatherApp
 {
     public partial class App : Application
     {
