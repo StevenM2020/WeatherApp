@@ -41,6 +41,12 @@ public partial class MainPage : ContentPage
         {
             weatherDataDays = await Weather.GetWeatherData(txtZipCode.Text);
 
+            if (!Validation.IsValidWeather(weatherDataDays))
+            {
+                await DisplayAlert("Error", "Invalid Weather Data", "OK");
+                blnSendingRequest = false;
+                return;
+            }
             FillGrid();
 
             lblAI.Text = "AI Weather Recommendations Loading...";
@@ -53,7 +59,8 @@ public partial class MainPage : ContentPage
                 return;
             }
 
-            lblAI.Text = await OpenAI.SendOpenAI(weatherDataDays);
+            string strAI = await OpenAI.SendOpenAI(weatherDataDays);
+            lblAI.Text = Validation.IsValidAIResponse(strAI) ? strAI : "AI Weather Recommendations Failed";
         }
         catch (HttpRequestException ex)
         {
@@ -70,11 +77,7 @@ public partial class MainPage : ContentPage
     {
         btnGetWeather.IsEnabled = false;
         if(blnSendingRequest) return;
-
-        foreach (var chrTxt in txtZipCode.Text)
-            if (!char.IsDigit(chrTxt))
-                return;
-
+        if(!Validation.IsValidZipCode(txtZipCode.Text)) return;
         btnGetWeather.IsEnabled = txtZipCode.Text.Length == 5;
     }
 

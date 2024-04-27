@@ -21,15 +21,17 @@ namespace WeatherApp
 
                 // create the message to send to the AI
                 string model = "gpt-3.5-turbo";
-                string systemContent = "You give weather recommendations but the response must be between 250 and 300 characters. Dont recommend rain gear unless you think its going to rain or its high enough to be cautious. Only Recommend things that are useful and be funny.";
+                string systemContent =
+                    $"You give weather recommendations but the response must be between 250 and 300 characters. Dont recommend rain gear unless you think its going to rain or its high enough to be cautious. Only Recommend things that are useful and be funny.";
                 string userContent = $"The weather for today shows an average temperature of  {weatherDataDays[0].avgTemp}°F with a maximum of {weatherDataDays[0].maxTemp}°F and a minimum of {weatherDataDays[0].minTemp}°F. Cloud cover is at {weatherDataDays[0].cloudCover}%, with precipitation at {weatherDataDays[0].precipitation}% and snow intensity will be {weatherDataDays[0].maxSnowIntensity}%. Wind speeds average around {weatherDataDays[0].avgWindSpeed} mph.";
                 var message = new
                 {
                     model = model,
+                    max_tokens = 150,
                     messages = new[]
                     {
                     new { role = "system", content = systemContent },
-                    new { role = "user", content = userContent }
+                    new { role = "user", content = userContent}
                 }
                 };
                 string contentString = JsonConvert.SerializeObject(message, Formatting.Indented);

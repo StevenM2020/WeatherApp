@@ -17,7 +17,8 @@
             <Entry x:Name="txtZipCode" 
                    Placeholder="Enter your zip code here." 
                    TextChanged="TxtZipCode_OnTextChanged" 
-                   Completed="TxtZipCode_OnCompleted"/>
+                   Completed="TxtZipCode_OnCompleted"
+                   MaxLength="5"/>
 
             <Button x:Name="btnGetWeather" 
                     Text="Get Weather Forecast" 
