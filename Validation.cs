@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using logger = WeatherApp.Logger;
 
 namespace WeatherApp
 {
@@ -41,12 +43,16 @@ namespace WeatherApp
                 if (weatherData.avgWindSpeed < 0 || weatherData.avgWindSpeed > 100)
                     return false;
             }
+            logger.Log("Weather data is valid");
             return true;
         }
 
         public static bool IsValidAIResponse(string response)
         {
-            return response.Length >= 200 && response.Length <= 350;
+            bool aiResponse = response.Length >= 200 && response.Length <= 350;
+            logger.Log(aiResponse ? "AI Response is valid" : "AI Response is invalid");
+            return aiResponse;
+
         }
     }
 }

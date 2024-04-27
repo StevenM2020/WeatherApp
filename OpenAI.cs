@@ -1,10 +1,12 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using weatherData = WeatherApp.Weather.weatherData;
+using logger = WeatherApp.Logger;
 
 namespace WeatherApp
 {
@@ -49,13 +51,14 @@ namespace WeatherApp
                 // parse and display
                 var responseObject = JsonConvert.DeserializeObject<dynamic>(responseContent);
                 var responseText = responseObject.choices[0].message.content.ToString();
+                logger.Log("AI Response: " + responseText);
                 return responseText;
 
                 // https://platform.openai.com/docs/guides/text-generation/reproducible-outputs
             }
-            catch (HttpRequestException ex)
+            catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                logger.Log("OpenAI Error: " + ex);
                 return "AI Weather Recommendations Failed";
             }
         }

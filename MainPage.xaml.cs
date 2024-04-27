@@ -9,6 +9,7 @@ using System.Net.Http;
 using System.Text;
 
 using weatherData = WeatherApp.Weather.weatherData;
+using logger = WeatherApp.Logger;
 
 namespace WeatherApp;
 
@@ -21,10 +22,12 @@ public partial class MainPage : ContentPage
     {
         InitializeComponent();
         btnGetWeather.IsEnabled = false;
+        logger.Log("Main page loaded");
     }
 
     private async void BtnGetWeather_OnClickedAsync(object sender, EventArgs e)
     {
+        logger.Log("Get Weather Button Clicked, zipcode: " + txtZipCode.Text);
         blnSendingRequest = true;
         btnGetWeather.IsEnabled = false;
         weatherDataDays.Clear();
@@ -32,6 +35,7 @@ public partial class MainPage : ContentPage
         // TODO: move to validation later
         if (await SecureStorage.GetAsync("WeatherApiKey") == null)
         {
+            logger.Log("Weather API Key Failed to load");
             await DisplayAlert("Error", "Weather API Key Failed to load", "OK");
             blnSendingRequest = false;
             return;
@@ -40,15 +44,15 @@ public partial class MainPage : ContentPage
         try
         {
             weatherDataDays = await Weather.GetWeatherData(txtZipCode.Text);
-
             if (!Validation.IsValidWeather(weatherDataDays))
             {
+                logger.Log("Invalid Weather Data");
                 await DisplayAlert("Error", "Invalid Weather Data", "OK");
                 blnSendingRequest = false;
                 return;
             }
-            FillGrid();
 
+            FillGrid();
             lblAI.Text = "AI Weather Recommendations Loading...";
 
             if (await SecureStorage.GetAsync("OpenAIApiKey") == null)
@@ -61,11 +65,12 @@ public partial class MainPage : ContentPage
 
             string strAI = await OpenAI.SendOpenAI(weatherDataDays);
             lblAI.Text = Validation.IsValidAIResponse(strAI) ? strAI : "AI Weather Recommendations Failed";
+            logger.Log("AI Response shown");
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
-            await DisplayAlert("Error", ex.Message, "OK");
+            logger.Log("Error :" + ex);
+            await DisplayAlert("Error", "An error occured, please try again later.", "OK");
             blnSendingRequest = false;
         }
         blnSendingRequest = false;
@@ -105,6 +110,7 @@ public partial class MainPage : ContentPage
 
         for (var i = 0; i < 3; i++)
             AddWeatherToGrid(weatherDataDays[i], i);
+        logger.Log("Weather Grid Filled");
     }
 
     // This method adds the weather data to the grid using the weatherData struct and the column number.

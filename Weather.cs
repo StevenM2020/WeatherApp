@@ -9,12 +9,14 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Net.Http;
 using System.Text;
+using Microsoft.Extensions.Logging;
+
+using logger = WeatherApp.Logger;
 
 namespace WeatherApp
 {
     internal static class Weather
     {
-
         public struct weatherData
         {
             public float minTemp;
@@ -26,6 +28,14 @@ namespace WeatherApp
             public float maxSnowIntensity;
             public float avgSnowAccumulation;
             public float avgWindSpeed;
+
+            public override string ToString()
+            {
+                return "Min Temp: " + minTemp + " Max Temp: " + maxTemp + " Avg Temp: " + avgTemp + " Precipitation: " +
+                       precipitation + " Cloud Cover: " + cloudCover + " Day: " + day + " Max Snow Intensity: " +
+                       maxSnowIntensity + " Avg Snow Accumulation: " + avgSnowAccumulation + " Avg Wind Speed: " +
+                       avgWindSpeed;
+            }
         }
 
         public static string GetWeatherEmoji(weatherData weather)
@@ -101,14 +111,15 @@ namespace WeatherApp
                     weatherDataDay.avgWindSpeed =
                         float.Parse(weather["timelines"]["daily"][i]["values"]["windSpeedAvg"].ToString());
 
+                    logger.Log("Day "+ (i - intStartDay) +" weather data: " + weatherDataDay.ToString());
                     weatherDataDays.Add(weatherDataDay);
 
                     // https://docs.tomorrow.io/recipes
                 }
             }
-            catch (HttpRequestException ex)
+            catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                logger.Log("Weather API Error: " + ex);
             }
 
             return weatherDataDays;
