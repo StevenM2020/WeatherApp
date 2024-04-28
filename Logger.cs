@@ -21,7 +21,7 @@ namespace WeatherApp
             ConsoleLog(message);
             if (!blnLogging)
                 return;
-            string logFileDebugPath = await SecureStorage.GetAsync("LogFileDebugPath");
+            string? logFileDebugPath = await SecureStorage.GetAsync("LogFileDebugPath");
             if (logFileDebugPath == null)
             {
                 ConsoleLog("logFileDebugPath not found");

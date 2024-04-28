@@ -13,7 +13,7 @@
         }
 
         // this method is used to set the size of the window
-        protected override Window CreateWindow(IActivationState activationState)
+        protected override Window CreateWindow(IActivationState? activationState)
         {
             Window window = base.CreateWindow(activationState);
             window.Height = 750;

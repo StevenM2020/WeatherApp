@@ -15,7 +15,7 @@
                 SemanticProperties.HeadingLevel="Level1"></Label>
 
             <Entry x:Name="txtZipCode" 
-                   Placeholder="Enter your zip code here." 
+                   Placeholder="Enter your zip code here. (five numbers)" 
                    TextChanged="TxtZipCode_OnTextChanged" 
                    Completed="TxtZipCode_OnCompleted"
                    MaxLength="5"/>

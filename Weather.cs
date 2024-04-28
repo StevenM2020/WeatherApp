@@ -6,12 +6,9 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System.Net.Http;
-using System.Text;
 using Microsoft.Extensions.Logging;
 
-using logger = WeatherApp.Logger;
 
 namespace WeatherApp
 {
@@ -29,7 +26,7 @@ namespace WeatherApp
             public float avgSnowAccumulation;
             public float avgWindSpeed;
 
-            public override string ToString()
+            public readonly override string ToString()
             {
                 return "Min Temp: " + minTemp + " Max Temp: " + maxTemp + " Avg Temp: " + avgTemp + " Precipitation: " +
                        precipitation + " Cloud Cover: " + cloudCover + " Day: " + day + " Max Snow Intensity: " +
@@ -87,31 +84,33 @@ namespace WeatherApp
 
                 // this line checks if the first day is the current day or not
                 var intStartDay = DateTime.Today.ToString("d").Split("/")[1] ==
-                                  weather["timelines"]["daily"][0]["time"].ToString().Split("/")[1] ? 0 : 1;
+                                  weather["timelines"]?["daily"]?[0]?["time"]?.ToString().Split("/")[1] ? 0 : 1;
 
                 for (var i = intStartDay; i < 3 + intStartDay; i++)
                 {
                     var weatherDataDay = new weatherData();
-                    weatherDataDay.minTemp =
-                        float.Parse(weather["timelines"]["daily"][i]["values"]["temperatureMin"].ToString());
-                    weatherDataDay.maxTemp =
-                        float.Parse(weather["timelines"]["daily"][i]["values"]["temperatureMax"].ToString());
-                    weatherDataDay.avgTemp =
-                        float.Parse(weather["timelines"]["daily"][i]["values"]["temperatureAvg"].ToString());
-                    weatherDataDay.precipitation =
-                        float.Parse(weather["timelines"]["daily"][i]["values"]["precipitationProbabilityAvg"]
-                            .ToString());
-                    weatherDataDay.cloudCover =
-                        float.Parse(weather["timelines"]["daily"][i]["values"]["cloudCoverAvg"].ToString());
-                    weatherDataDay.day = int.Parse(weather["timelines"]["daily"][i]["time"].ToString().Split("/")[1]);
-                    weatherDataDay.maxSnowIntensity =
-                        float.Parse(weather["timelines"]["daily"][i]["values"]["snowIntensityMax"].ToString());
-                    weatherDataDay.avgSnowAccumulation =
-                        float.Parse(weather["timelines"]["daily"][i]["values"]["snowAccumulationAvg"].ToString());
-                    weatherDataDay.avgWindSpeed =
-                        float.Parse(weather["timelines"]["daily"][i]["values"]["windSpeedAvg"].ToString());
+                    JToken? weatherData = weather["timelines"]?["daily"]?[i]?["values"];
+                    try
+                    {
+                        weatherDataDay.minTemp = float.Parse(weatherData?["temperatureMin"]?.ToString());
+                        weatherDataDay.maxTemp = float.Parse(weatherData?["temperatureMax"]?.ToString());
+                        weatherDataDay.avgTemp = float.Parse(weatherData?["temperatureAvg"]?.ToString());
+                        weatherDataDay.precipitation =
+                            float.Parse(weatherData?["precipitationProbabilityAvg"]?.ToString());
+                        weatherDataDay.cloudCover = float.Parse(weatherData?["cloudCoverAvg"]?.ToString());
+                        weatherDataDay.day = int.Parse(weather["timelines"]["daily"][i]["time"].ToString().Split("/")[1]);
+                        weatherDataDay.maxSnowIntensity =
+                            weatherDataDay.maxSnowIntensity = float.Parse(weatherData?["snowIntensityMax"]?.ToString());
+                        weatherDataDay.avgSnowAccumulation =
+                            float.Parse(weatherData?["snowAccumulationAvg"]?.ToString());
+                        weatherDataDay.avgWindSpeed = float.Parse(weatherData?["windSpeedAvg"]?.ToString());
+                    }
+                    catch(Exception ex)
+                    {
+                        Logger.Log("Weather API Error: " + ex);
+                    }
 
-                    logger.Log("Day "+ (i - intStartDay) +" weather data: " + weatherDataDay.ToString());
+                    Logger.Log("Day "+ (i - intStartDay) +" weather data: " + weatherDataDay.ToString());
                     weatherDataDays.Add(weatherDataDay);
 
                     // https://docs.tomorrow.io/recipes
@@ -119,7 +118,7 @@ namespace WeatherApp
             }
             catch (Exception ex)
             {
-                logger.Log("Weather API Error: " + ex);
+                Logger.Log("Weather API Error: " + ex);
             }
 
             return weatherDataDays;

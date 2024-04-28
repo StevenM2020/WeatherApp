@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using weatherData = WeatherApp.Weather.weatherData;
-using logger = WeatherApp.Logger;
 
 namespace WeatherApp
 {
@@ -50,15 +49,15 @@ namespace WeatherApp
 
                 // parse and display
                 var responseObject = JsonConvert.DeserializeObject<dynamic>(responseContent);
-                var responseText = responseObject.choices[0].message.content.ToString();
-                logger.Log("AI Response: " + responseText);
-                return responseText;
+                var responseText = responseObject?.choices[0].message.content.ToString();
+                Logger.Log("AI Response: " + responseText);
+                return responseText == null ? "" : responseText;
 
                 // https://platform.openai.com/docs/guides/text-generation/reproducible-outputs
             }
             catch (Exception ex)
             {
-                logger.Log("OpenAI Error: " + ex);
+                Logger.Log("OpenAI Error: " + ex);
                 return "AI Weather Recommendations Failed";
             }
         }
