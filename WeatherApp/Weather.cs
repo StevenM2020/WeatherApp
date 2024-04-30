@@ -1,18 +1,10 @@
 ﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using System.Net.Http;
-using Microsoft.Extensions.Logging;
 
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("WeatherApp.nUnitTests")]
 
 namespace WeatherApp
 {
-    internal static class Weather
+    public static class Weather
     {
         public struct weatherData
         {
@@ -65,7 +57,13 @@ namespace WeatherApp
         public static async Task<List<weatherData>> GetWeatherData(string zipCode)
          {
              List<weatherData> weatherDataDays = new List<weatherData>();
-            var WeatherAPIKey = await SecureStorage.GetAsync("WeatherApiKey");
+
+             if (!Validation.IsValidZipCode(zipCode))
+             {
+                 return weatherDataDays;
+             }
+
+             var WeatherAPIKey = await SecureStorage.GetAsync("WeatherApiKey");
             var url = "https://api.tomorrow.io/v4/weather/forecast?location=" + zipCode +
                       "&timesteps=1d&units=imperial&apikey=" + WeatherAPIKey;
 

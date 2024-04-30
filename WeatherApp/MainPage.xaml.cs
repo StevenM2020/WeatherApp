@@ -3,10 +3,6 @@
 //Date:     2/1/2024
 //Purpose:  This program is a weather app that uses the Tomorrow.io API to get the weather for the next 3 days
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.Net.Http;
-using System.Text;
 
 using weatherData = WeatherApp.Weather.weatherData;
 
@@ -14,6 +10,7 @@ namespace WeatherApp;
 
 public partial class MainPage : ContentPage
 {
+
     bool blnSendingRequest = false;
 
     List<weatherData> weatherDataDays = new List<weatherData>();

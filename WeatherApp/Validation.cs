@@ -1,19 +1,16 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-
+﻿using System.Text.RegularExpressions;
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("WeatherApp.nUnitTests")]
 namespace WeatherApp
 {
-    internal class Validation
+    public class Validation
     {
         private static readonly string ZipPattern = @"^\d{5}$";
 
         public static bool IsValidZipCode(string zipCode)
         {
-            return Regex.IsMatch(zipCode, ZipPattern);
+            bool isValid = Regex.IsMatch(zipCode, ZipPattern);
+            Logger.Log(isValid ? "Zip code is valid" : "Zip code is invalid");
+            return isValid;
         }
 
         // checks the list range and the values of the weather data
